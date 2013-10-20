@@ -1,0 +1,4 @@
+delete record
+modify record properties
+selecting date by calendar
+place to github
