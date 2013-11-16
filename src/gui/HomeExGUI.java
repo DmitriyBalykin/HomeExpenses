@@ -1,5 +1,6 @@
-package homeex;
+package gui;
 import static Utils.SwingConsole.run;
+
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -49,6 +50,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 import javax.swing.border.BevelBorder;
+
+import core.DataAccess;
+import core.DataTuple;
+import core.HomeEXConfig;
+import exception.PasswordFormatException;
+
 import Utils.BrowserControl;
 
 

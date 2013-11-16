@@ -1,4 +1,5 @@
-package homeex;
+package core;
+
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -23,6 +24,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
 import com.mysql.jdbc.Connection;
+
+import exception.StringFormatException;
 
 
 
@@ -318,7 +321,9 @@ public class DataAccess{
 			String s = "";
 			reader.readLine();
 			while((s = reader.readLine()) != null){
-				
+				if(s.equals("")){
+					continue;
+				}
 				String arr[] = s.split(SEPARATOR);
 				list.add(new DataTuple(new Long(arr[0]), new Integer(arr[1]), arr[2], arr[3], new Float(arr[4]), new Float(arr[5]), new Float(arr[6])));
 			}

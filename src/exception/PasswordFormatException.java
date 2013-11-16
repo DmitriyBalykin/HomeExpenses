@@ -1,4 +1,4 @@
-package homeex;
+package exception;
 
 public class PasswordFormatException extends Exception{
 	

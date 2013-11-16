@@ -1,4 +1,5 @@
-package homeex;
+package gui;
+
 
 import java.awt.Color;
 import java.awt.GridBagConstraints;
@@ -22,7 +23,10 @@ import javax.swing.JPopupMenu;
 
 import com.sun.org.apache.bcel.internal.generic.NEW;
 
-class DataGrid extends JPanel{
+import core.DataRow;
+import core.DataTuple;
+
+public class DataGrid extends JPanel{
 	private final static String mTextNoColors = "Скрыть цвета цен",
 			mTextColors = "Показать цвета цен";
 	private String[] colHeaders = {"Дата", "Тип", "Наименование", "Количество", "Цена за единицу", "Общая цена"};

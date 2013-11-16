@@ -1,16 +1,17 @@
-package homeex;
+package core;
+
+import gui.DataGrid;
 
 import java.awt.Color;
 import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-class DataRow extends JPanel{
+
+public class DataRow extends JPanel{
 	boolean selected = false;
 	private long rowId;
 	DataGrid dGrid = null;
@@ -20,7 +21,7 @@ class DataRow extends JPanel{
 		setLayout(new GridLayout(1, 6));
 		addMouseListener(new MouseClickListener());
 	}
-	DataRow(DataGrid dg, DataTuple dt, Color clr){
+	public DataRow(DataGrid dg, DataTuple dt, Color clr){
 		this();
 		dGrid = dg;
 		myColor = clr;
@@ -36,7 +37,7 @@ class DataRow extends JPanel{
 		add(new JLabel(Float.toString(dt.prodCost)));
 		add(new JLabel(Float.toString(dt.prodTotCost)));
 	}
-	DataRow(String... header){
+	public DataRow(String... header){
 		this();
 		for(String s:header)
 			add(new JLabel(s));

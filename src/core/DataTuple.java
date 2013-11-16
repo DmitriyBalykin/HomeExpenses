@@ -1,8 +1,12 @@
-package homeex;
+package core;
+
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import static homeex.DataAccess.SEPARATOR;
+
+import exception.StringFormatException;
+
+import static core.DataAccess.SEPARATOR;
 
 public class DataTuple{
 	public String prodType, prodName;

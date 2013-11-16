@@ -1,4 +1,6 @@
-package homeex;
+package core;
+
+import exception.PasswordFormatException;
 
 public class HomeEXConfig {
 	public String hostAddr, hostPort, userName, dbName, tableName, userPass;
