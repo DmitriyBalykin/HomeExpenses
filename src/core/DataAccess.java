@@ -1,6 +1,5 @@
 package core;
 
-
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.BufferedReader;
@@ -23,6 +22,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TreeSet;
+
 import com.mysql.jdbc.Connection;
 
 import exception.StringFormatException;
@@ -80,9 +80,25 @@ public class DataAccess{
 		return resDb || resFile;
 	}
 	private boolean writeToDb(DataTuple dt){
-		String q = "INSERT INTO EX(ID, DATE, TYPE, NAME, NUMBER, ONECOST, TOTCOST) VALUES " +
-				"('"+dt.id+"','"+dt.date+"','"+dt.prodType+"','"+dt.prodName+"','"+dt.prodNum+"','"+dt.prodCost+"','"+dt.prodTotCost+"');";
-		sentQuery(q);
+		if(!dt.isCorrect) {
+			writeSuccess = false;
+		}
+		else {
+			String q = "INSERT INTO EX(ID, DATE, TYPE, NAME, NUMBER, ONECOST, TOTCOST) VALUES "
+					+ "('"
+					+ dt.id
+					+ "','"
+					+ dt.date
+					+ "','"
+					+ dt.prodType
+					+ "','"
+					+ dt.prodName
+					+ "','"
+					+ dt.prodNum
+					+ "','"
+					+ dt.prodCost + "','" + dt.prodTotCost + "');";
+			sentQuery(q);
+		}
 		
 		return writeSuccess;	//writeSuccess sets true by sentQuery as result of null Result set but not 0 updateCount
 	}
@@ -203,7 +219,6 @@ public class DataAccess{
 		try {
 			for(Long val:absentInDb){
 				resErr = writeToDb(new DataTuple(fileMap.get(val)));
-				if(!resErr) break;
 			}
 		} catch (StringFormatException e) {
 			resErr = false;
@@ -315,16 +330,24 @@ public class DataAccess{
 	private List<DataTuple> readFile(String query){
 		//this method selects from file rows, without projecting by columns 
 		List<DataTuple> list = new ArrayList<DataTuple>();
+		String[] arrTemp = null; 
 		try {
 			
 			BufferedReader reader = new BufferedReader(new FileReader(new File(dataFileName)));
 			String s = "";
 			reader.readLine();
-			while((s = reader.readLine()) != null){
-				if(s.equals("")){
-					continue;
-				}
+			OUTER:while((s = reader.readLine()) != null){
+				
 				String arr[] = s.split(SEPARATOR);
+				arrTemp = arr;
+				for(String s1 : arr)
+				{
+					if(s1.equals(""))
+					{
+						sendMessage("Ошибка записи данных: пустое значение");
+						continue OUTER;
+					}
+				}
 				list.add(new DataTuple(new Long(arr[0]), new Integer(arr[1]), arr[2], arr[3], new Float(arr[4]), new Float(arr[5]), new Float(arr[6])));
 			}
 			reader.close();
@@ -338,7 +361,7 @@ public class DataAccess{
 			e.printStackTrace();
 		} catch (NumberFormatException e) {
 			// TODO Auto-generated catch block
-			sendMessage("Ошибка чтения файла: неправильный формат чисел");
+			sendMessage("Ошибка чтения файла: неправильный формат чисел. Current data: " + arrTemp);
 			e.printStackTrace();
 		}
 		

@@ -1,7 +1,4 @@
 package gui;
-import static Utils.SwingConsole.run;
-
-
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -33,6 +30,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -48,68 +46,82 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.SwingWorker;
 import javax.swing.border.BevelBorder;
 
+import Utils.BrowserControl;
 import core.DataAccess;
 import core.DataTuple;
 import core.HomeEXConfig;
 import exception.PasswordFormatException;
-
-import Utils.BrowserControl;
+import static Utils.Log.log;
+import static Utils.SwingConsole.run;
 
 
 public class HomeExGUI extends JFrame {
 	private static final int WIDTH = 1100;
-	private static final int MINHEIGHT = 150;
+	private static final int MINHEIGHT = 180;
 	private static final int MAXHEIGHT = 880;
 	private static final Dimension screenD = Toolkit.getDefaultToolkit().getScreenSize();
 	private static final int SCREENHEIGHT = (int) screenD.getHeight();
 	private static final int SCREENWIDTH = (int) screenD.getWidth();
 	private static List<String> nameList = new ArrayList<String>();
-	String[] types = {"Еда","Хоз.Товары", "Электроника","Одежда","Снаряжение","Медицина","Кварт. услуги", "Прочее"};
 	
-	JPanel currentPanel = new JPanel(),
-			loadDataPanel = new JPanel(),
-			readDataPanel = new JPanel(),
-			selectorsPanel = new JPanel(new GridLayout(6, 3)),
-			statusPanel = new JPanel();
-	JLabel dateLabel = new JLabel("      Дата      "),
-			typeLabel = new JLabel("Тип покупки"),
-			prodNameLabel = new JLabel("Название покупки"),
-			prodNumbLabel = new JLabel("Количество"),
-			prodOneCostLabel = new JLabel("Цена за единицу"),
-			prodTotCostLabel = new JLabel("Общая цена"),
-			statusLabel = new JLabel();
-	JTextField dateField = new JTextField(8),
-			
-			prodNameField = new JTextField(25),
-			prodNameSelField = new JTextField(10),
-			prodNumbField = new JTextField(3),
-			prodOneCostField = new JTextField(5),
-			prodTotCostField = new JTextField(5),
-			prodCostStartField = new JTextField(5),
-			prodCostEndField = new JTextField(5),
-			dateStartField = new JTextField(),
-			dateEndField = new JTextField();
-
+	String[] types = {"Еда","Хоз.Товары","Автомобиль","Электроника","Одежда","Снаряжение","Медицина","Кварт. услуги", "Прочее"};
 	
-	JComboBox typeCombo = new JComboBox(types),
-				selTypeCombo = new JComboBox(types);
-	JButton sendButton = new JButton("Сохранить данные"),
-			getDataButton = new JButton("Получить данные"),
-			dataToHTMLButton = new JButton("Открыть данные в HTML");
-	JCheckBox selDateButton = new JCheckBox("по дате"),
-			selTypeButton = new JCheckBox("по типу покупки"),
-			selNameButton = new JCheckBox("по имени покупки"),
-			selCostButton = new JCheckBox("по стоимости");
-	JMenuItem loadDataItem = new JMenuItem("Загрузить данные"),
-			readDataItem = new JMenuItem("Считать данные"),
-			dbToFileItem = new JMenuItem("Скопировать данные в файл"),
-			setMenuItem = new JMenuItem("Настройки хранения данных");
-	JMenu menu = new JMenu("Главное меню"),
-			menuSettings = new JMenu("Настройки");
+	JPanel
+		currentPanel = new JPanel(),
+		loadDataPanel = new JPanel(),
+		readDataPanel = new JPanel(),
+		selectorsPanel = new JPanel(new GridLayout(6, 3)),
+		statusPanel = new JPanel();
+	JLabel
+		dateLabel = new JLabel("      Дата      "),
+		typeLabel = new JLabel("Тип покупки"),
+		prodNameLabel = new JLabel("Название покупки"),
+		prodNumbLabel = new JLabel("Количество"),
+		prodOneCostLabel = new JLabel("Цена за единицу"),
+		prodTotCostLabel = new JLabel("Общая цена"),
+		statusLabel = new JLabel();
+	JTextField
+		dateField = new JTextField(8),
+		prodNameField = new JTextField(25),
+		prodNameSelField = new JTextField(10),
+		prodNumbField = new JTextField(3),
+		prodOneCostField = new JTextField(5),
+		prodTotCostField = new JTextField(5),
+		prodCostStartField = new JTextField(5),
+		prodCostEndField = new JTextField(5),
+		dateStartField = new JTextField(),
+		dateEndField = new JTextField();
+	
+	JComboBox
+		typeCombo = new JComboBox(types),
+		selTypeCombo = new JComboBox(types);
+	JButton
+		sendButton = new JButton("Сохранить данные"),
+		getDataButton = new JButton("Получить данные"),
+		dataToHTMLButton = new JButton("Открыть данные в HTML");
+	JToggleButton
+		calcQuantButton = new JToggleButton("Считать"),
+		calcOneButton = new JToggleButton("Считать");
+	JCheckBox
+		selDateButton = new JCheckBox("по дате"),
+		selTypeButton = new JCheckBox("по типу покупки"),
+		selNameButton = new JCheckBox("по имени покупки"),
+		selCostButton = new JCheckBox("по стоимости");
+	JMenuItem
+		loadDataItem = new JMenuItem("Загрузить данные"),
+		readDataItem = new JMenuItem("Считать данные"),
+		dbToFileItem = new JMenuItem("Скопировать данные в файл"),
+		setMenuItem = new JMenuItem("Настройки хранения данных");
+	JMenu
+		menu = new JMenu("Главное меню"),
+		menuSettings = new JMenu("Настройки");
 	JMenuBar menuBar = new JMenuBar();
+	
+	KL keyListener = new KL(KL.FLOAT_TYPE);
 	
 	HomeEXConfig config;
 	DataAccess da;
@@ -140,10 +152,28 @@ public class HomeExGUI extends JFrame {
 		setResizable(false);
 
 		sendButton.addActionListener(new SL());
+		calcQuantButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				keyListener.quantityManualChanged();
+				calcOneButton.setSelected(false);
+//				prodTotCostField.disable();
+			}
+		});
+		calcOneButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				keyListener.oneItemManualChanged();
+				calcQuantButton.setSelected(false);
+//				prodTotCostField.disable();
+			}
+		});
 		getDataButton.addActionListener(new GL());
-		prodNumbField.addKeyListener(new KL("float"));
-		prodOneCostField.addKeyListener(new KL("float"));
-		prodTotCostField.addKeyListener(new TotalCostListener("float"));
+		prodNumbField.addKeyListener(keyListener);
+		prodOneCostField.addKeyListener(keyListener);
+		prodTotCostField.addKeyListener(keyListener);
 		
 		loadDataItem.addActionListener(new ActionListener() {
 			@Override
@@ -221,6 +251,7 @@ public class HomeExGUI extends JFrame {
 		GridBagConstraints c = new GridBagConstraints();
 		c.fill = GridBagConstraints.BOTH;
 		c.anchor = GridBagConstraints.CENTER;
+		//Row 1: headers
 		c.gridx = 1;
 		c.gridy = 1;
 		c.insets = new Insets(5,10,5,10);
@@ -246,6 +277,7 @@ public class HomeExGUI extends JFrame {
 		c.gridy = 1;
 		gbl.setConstraints(prodTotCostLabel, c);
 		loadDataPanel.add(prodTotCostLabel);
+		//Row two: fields
 		c.gridx = 1;
 		c.gridy = 2;
 		gbl.setConstraints(dateField, c);
@@ -274,7 +306,16 @@ public class HomeExGUI extends JFrame {
 		c.gridy = 2;
 		gbl.setConstraints(sendButton, c);
 		loadDataPanel.add(sendButton);
-
+		//Row 3: begin: control buttons
+		c = new GridBagConstraints();
+		c.gridx = 4;
+		c.gridy = 3;
+		gbl.setConstraints(calcQuantButton, c);
+		loadDataPanel.add(calcQuantButton);
+		c.gridx = 5;
+		c.gridy = 3;
+		gbl.setConstraints(calcOneButton, c);
+		loadDataPanel.add(calcOneButton);
 	}
 	private void confReadPanel(){
 		
@@ -453,6 +494,10 @@ public class HomeExGUI extends JFrame {
 				statusLabel.setText("Запись \""+prodNameField.getText()+"\" сохранена");
 			else
 				statusLabel.setText("Ошибка при сохранении записи");
+			
+			calcOneButton.setSelected(false);
+			calcQuantButton.setSelected(false);
+			keyListener.clearManualCalc();
 		}
 		
 	}
@@ -489,7 +534,19 @@ public class HomeExGUI extends JFrame {
 	}
 	class KL implements KeyListener{
 		String type;
+		
+		private boolean calcQuantityManual = false;
+		private boolean calcOneItemCostManual = false;
+		
+		public static final String FLOAT_TYPE = "float";
+		protected boolean actionPerformed = false;
 		char[] digits = "0123456789".toCharArray();
+		
+		Float quant;
+		Float one;
+		Float total;
+		
+		protected boolean notDigit = false;
 		
 		KL(String t){
 			type = t;
@@ -497,49 +554,85 @@ public class HomeExGUI extends JFrame {
 		
 		@Override
 		public void keyTyped(KeyEvent e) {
-			
+			log("pressed:" + e.getKeyCode());
 			if(e.getKeyChar() == ','){
 				e.setKeyChar('.');
 			}
-			if(!isDigit(e.getKeyChar()))
-				e.consume();
+			checkForConsume(e);
 		}
-		@Override
-		public void keyPressed(KeyEvent e) {
+		public void quantityManualChanged() {
+			calcQuantityManual = !calcQuantityManual;
+			calcOneItemCostManual = false;
 		}
-		@Override
-		public void keyReleased(KeyEvent e) {
-			String s1 = prodNumbField.getText();
-			String s2 = prodOneCostField.getText();
-			if(!s1.equals("") && !s2.equals("")){
-				Float numb = new Float(s1);
-				Float onecost = new Float(s2);
-				prodTotCostField.setText(String.format("%.2f", numb*onecost).replace(',', '.'));
-			}
-		}
-		private boolean isDigit(char c){
-			if(type == "float" && c == '.')	return true;
-			for(char dc:digits)
-				if(dc == c) return true;
-			return false;
-		}
-	}
-	class TotalCostListener extends KL{
-		TotalCostListener(String t){
-			super(t);
+
+		public void oneItemManualChanged() {
+			calcOneItemCostManual = !calcOneItemCostManual;
+			calcQuantityManual = false;
 		}
 		
+		public void clearManualCalc(){
+			calcOneItemCostManual = false;
+			calcQuantityManual = false;
+		}
+
 		@Override
 		public void keyReleased(KeyEvent e) {
+			updateFieldsValues();
+			boolean allFilled = (one != null) && (quant != null) && (total != null);
+			log("is calc quantity manual: "+calcQuantityManual);
+			log("is calc one manual: "+calcOneItemCostManual);
 			
-			String s1 = prodTotCostField.getText();
-			String s2 = prodOneCostField.getText();
-			if(!s1.isEmpty() || !s2.isEmpty()){
-				Float totCost = new Float(s1);
-				Float oneCost = new Float(s2);
-				prodNumbField.setText(String.format("%.2f", totCost/oneCost).replace(',', '.'));
+			//three cases when one of the fields is empty with Manual/Automatic target field detection
+			if((one == null || calcOneItemCostManual && allFilled) && quant != null && total != null){
+				prodOneCostField.setText(formatValue(total/quant).replace(',', '.'));
+				log("set product item cost");
+				
+			} else if((quant == null || calcQuantityManual && allFilled) && one != null && total != null){
+				prodNumbField.setText(formatValue(total/one));
+				log("set product items quantity");
+				
+			} else if(quant != null && one != null){
+				prodTotCostField.setText(formatValue(quant*one));
+				log("set product total items cost");
 			}
 		}
+		protected boolean checkForConsume(KeyEvent e){
+			if(!isDigit(e.getKeyChar())){
+				e.consume();
+				notDigit = true;
+				log("consume");
+				return true;
+			}
+			return false;
+		}
+		private void updateFieldsValues(){
+			quant = toFloat(prodNumbField.getText());
+			one = toFloat(prodOneCostField.getText());
+			total = toFloat(prodTotCostField.getText());
+		}
+		private boolean isDigit(char c){
+			if(type == FLOAT_TYPE && c == '.'){
+				return true;
+			}
+			for(char dc:digits){
+				if(dc == c) return true;
+			}
+			return false;
+		}
+		private Float toFloat(String s){
+			if(s.isEmpty()){
+				return null;
+			}
+			else{
+				return Float.valueOf(s);
+			}
+		}
+		protected String formatValue(Float f){
+			return String.format("%.2f", f).replace(',', '.');
+		}
+
+		@Override
+		public void keyPressed(KeyEvent e) {}
 	}
 	
 	class DateListener extends FocusAdapter{
@@ -723,15 +816,10 @@ public class HomeExGUI extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				dispose();
 			}
-			
 		}
 	}
 	
 	public static void main(String[] args){
 		run(new HomeExGUI(), WIDTH, MINHEIGHT);
 	}
-	
 }
-
-
-

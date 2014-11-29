@@ -1,11 +1,9 @@
 package core;
 
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import exception.StringFormatException;
-
 import static core.DataAccess.SEPARATOR;
 
 public class DataTuple{
@@ -13,6 +11,8 @@ public class DataTuple{
 	public float prodNum, prodCost, prodTotCost;
 	public long id;
 	public int date;
+	public boolean isCorrect = true;
+	
 	public DataTuple(long uid, int d, String pType, String pName, float pNum, float pCost, float pTotCost) {
 		id = uid;
 		date = d;
@@ -37,7 +37,12 @@ public class DataTuple{
 	}
 	public DataTuple(String s) throws StringFormatException {
 		String[] arr = s.split(",");
-		if(arr.length != 7) throw new StringFormatException();
+		
+		if(arr.length != 7){ 
+			isCorrect = false;
+			return;
+		}
+		
 		id = new Long(arr[0]);
 		date = new Integer(arr[1]);
 		prodType = arr[2];

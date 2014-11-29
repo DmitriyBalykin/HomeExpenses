@@ -21,8 +21,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
-import com.sun.org.apache.bcel.internal.generic.NEW;
-
 import core.DataRow;
 import core.DataTuple;
 
