@@ -5,16 +5,23 @@ import java.beans.PropertyChangeSupport;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CodingErrorAction;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -117,12 +124,26 @@ public class DataAccess{
 	private boolean writeToFile(DataTuple dt){
 		//version assigned to single use
 		File file = new File(dataFileName);
+		boolean newfile = false;
+		if(!file.exists()){
+			newfile = true;
+		}
 		try {
-			BufferedWriter writer = new BufferedWriter(new FileWriter(file, true));
+			CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
+			encoder.onMalformedInput(CodingErrorAction.REPORT);
+			encoder.onUnmappableCharacter(CodingErrorAction.REPORT);
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter( new FileOutputStream(file, true), encoder));
+			if(newfile){
+				writer.append("ID; Date; type; name; number; cost; totCost\n\r");
+			}
 			writeToFile(writer, dt);
 			writer.flush();
 			writer.close();
 			return true;
+		} catch(CharacterCodingException e){
+			sendMessage("Ошибка записи в файл: ошибка в кодировке");
+			e.printStackTrace();
+			return false;
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			sendMessage("Ошибка записи файла");
@@ -197,7 +218,18 @@ public class DataAccess{
 		syncRows = absentInFile.size() + absentInDb.size();
 		//Synchronizing db to file
 		try {
-			BufferedWriter buff = new BufferedWriter(new FileWriter(new File(dataFileName), true));
+			CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
+			encoder.onMalformedInput(CodingErrorAction.REPORT);
+			encoder.onUnmappableCharacter(CodingErrorAction.REPORT);
+			File file = new File(dataFileName);
+			boolean newfile = false;
+			if(!file.exists()){
+				newfile = true;
+			}
+			BufferedWriter buff = new BufferedWriter(new OutputStreamWriter( new FileOutputStream(file, true), encoder));
+			if(newfile){
+				buff.append("ID; Date; type; name; number; cost; totCost\n\r");
+			}
 			for(Long val:absentInFile){
 				String query1 = "SELECT * FROM EX WHERE ID='"+Long.toString(val)+"';";
 				res = sentQuery(conn, query1);
@@ -206,6 +238,10 @@ public class DataAccess{
 			}
 			buff.flush();
 			buff.close();
+		}
+		catch (CharacterCodingException e){
+			resErr = false;
+			sendMessage("Ошибка кодировки при записи данных в файл");
 		} catch (IOException e) {
 			resErr = false;
 			e.printStackTrace();
@@ -332,10 +368,10 @@ public class DataAccess{
 		List<DataTuple> list = new ArrayList<DataTuple>();
 		String[] arrTemp = null; 
 		try {
-			
-			BufferedReader reader = new BufferedReader(new FileReader(new File(dataFileName)));
+			BufferedReader reader = new BufferedReader( new InputStreamReader( new FileInputStream(new File(dataFileName)), "UTF8"));
+			 
 			String s = "";
-			reader.readLine();
+			reader.readLine(); //skip header line
 			OUTER:while((s = reader.readLine()) != null){
 				
 				String arr[] = s.split(SEPARATOR);
